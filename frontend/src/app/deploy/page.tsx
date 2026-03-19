@@ -58,8 +58,9 @@ export default function DeployPage() {
   const { data: deploymentsData, refetch: refetchDeployments } = useQuery({
     queryKey: ["deployments"],
     queryFn: () => deploy.deployments.list(),
-    refetchInterval: (data) => {
-      const running = data?.data?.some((d) => d.status === "running");
+    refetchInterval: (query) => {
+      const d = query.state.data as { data?: Array<{ status: string }> } | undefined;
+      const running = d?.data?.some((dep) => dep.status === "running");
       return running ? 2000 : false;
     },
   });
