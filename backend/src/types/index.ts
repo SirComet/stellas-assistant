@@ -96,6 +96,7 @@ export interface DeployTarget {
   password?: string;
   remotePath: string;
   webUrl?: string;
+  lastDeployedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
