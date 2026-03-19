@@ -147,6 +147,7 @@ export const crm = {
 
   projects: {
     list: () => request<{ success: boolean; data: Project[] }>("/api/crm/projects"),
+    get: (id: string) => request<{ success: boolean; data: Project }>(`/api/crm/projects/${id}`),
     create: (data: Partial<Project>) =>
       request<{ success: boolean; data: Project }>("/api/crm/projects", {
         method: "POST",
@@ -161,8 +162,121 @@ export const crm = {
       request<{ success: boolean }>(`/api/crm/projects/${id}`, { method: "DELETE" }),
   },
 
+  milestones: {
+    list: (projectId: string) =>
+      request<{ success: boolean; data: Milestone[] }>(`/api/crm/projects/${projectId}/milestones`),
+    create: (projectId: string, data: { title: string; dueDate?: string; status?: string }) =>
+      request<{ success: boolean; data: Milestone }>(`/api/crm/projects/${projectId}/milestones`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (projectId: string, id: string, data: Partial<Milestone>) =>
+      request<{ success: boolean; data: Milestone }>(`/api/crm/projects/${projectId}/milestones/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (projectId: string, id: string) =>
+      request<{ success: boolean }>(`/api/crm/projects/${projectId}/milestones/${id}`, { method: "DELETE" }),
+  },
+
+  activities: {
+    list: (contactId: string) =>
+      request<{ success: boolean; data: Activity[] }>(`/api/crm/contacts/${contactId}/activities`),
+    create: (contactId: string, data: { type?: string; title: string; body?: string; occurredAt?: string }) =>
+      request<{ success: boolean; data: Activity }>(`/api/crm/contacts/${contactId}/activities`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    delete: (contactId: string, id: string) =>
+      request<{ success: boolean }>(`/api/crm/contacts/${contactId}/activities/${id}`, { method: "DELETE" }),
+  },
+
   stats: () => request<{ success: boolean; data: CrmStats }>("/api/crm/stats"),
   insights: () => request<{ success: boolean; data: { analysis: string } }>("/api/crm/ai-insights"),
+};
+
+// Content
+export const content = {
+  posts: {
+    list: (params?: { type?: string; status?: string; search?: string }) =>
+      request<PaginatedResponse<ContentPost>>("/api/content/posts", {
+        params: params as Record<string, string> | undefined,
+      }),
+    get: (id: string) => request<{ success: boolean; data: ContentPost }>(`/api/content/posts/${id}`),
+    create: (data: Partial<ContentPost>) =>
+      request<{ success: boolean; data: ContentPost }>("/api/content/posts", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<ContentPost>) =>
+      request<{ success: boolean; data: ContentPost }>(`/api/content/posts/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/api/content/posts/${id}`, { method: "DELETE" }),
+    togglePublish: (id: string) =>
+      request<{ success: boolean; data: { status: string } }>(`/api/content/posts/${id}/publish`, {
+        method: "PUT",
+      }),
+  },
+  services: {
+    list: () => request<{ success: boolean; data: SiteService[] }>("/api/content/services"),
+    create: (data: Partial<SiteService>) =>
+      request<{ success: boolean; data: SiteService }>("/api/content/services", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<SiteService>) =>
+      request<{ success: boolean; data: SiteService }>(`/api/content/services/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/api/content/services/${id}`, { method: "DELETE" }),
+  },
+};
+
+// Admin
+export const admin = {
+  users: {
+    list: () => request<{ success: boolean; data: AdminUser[] }>("/api/admin/users"),
+    create: (data: { email: string; name: string; password: string; role: string }) =>
+      request<{ success: boolean; data: AdminUser }>("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateRole: (id: string, role: string) =>
+      request<{ success: boolean }>(`/api/admin/users/${id}/role`, {
+        method: "PUT",
+        body: JSON.stringify({ role }),
+      }),
+    toggleActive: (id: string, active: boolean) =>
+      request<{ success: boolean }>(`/api/admin/users/${id}/active`, {
+        method: "PUT",
+        body: JSON.stringify({ active }),
+      }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" }),
+  },
+  activity: {
+    list: (params?: { page?: string; limit?: string; resourceType?: string }) =>
+      request<{ success: boolean; data: ActivityLogEntry[] }>("/api/admin/activity", {
+        params: params as Record<string, string> | undefined,
+      }),
+  },
+  dbStats: () =>
+    request<{ success: boolean; data: { counts: Record<string, number>; fileSizeBytes: number } }>("/api/admin/db-stats"),
+};
+
+// DigitalOcean
+export const digitalocean = {
+  droplets: () =>
+    request<{ success: boolean; data: DoDroplet[] }>("/api/do/droplets"),
+  apps: () =>
+    request<{ success: boolean; data: DoApp[] }>("/api/digitalocean/apps"),
+  domains: () =>
+    request<{ success: boolean; data: DoDomain[] }>("/api/digitalocean/domains"),
 };
 
 // Deploy
@@ -274,12 +388,13 @@ export const llm = {
   oauthGoogleUrl: () => `${API_BASE}/api/llm/oauth/google/start`,
 };
 
-// Types
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "editor";
+  role: "admin" | "editor" | "viewer";
 }
 
 export interface Page {
@@ -322,6 +437,110 @@ export interface Project {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Milestone {
+  id: string;
+  projectId: string;
+  title: string;
+  dueDate?: string | null;
+  status: "pending" | "in_progress" | "done";
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Activity {
+  id: string;
+  contactId: string;
+  type: "note" | "email" | "call" | "meeting" | "status_change";
+  title: string;
+  body: string;
+  occurredAt: string;
+}
+
+export interface ContentPost {
+  id: string;
+  type: "blog" | "case_study";
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage?: string;
+  author: string;
+  status: "draft" | "published" | "archived";
+  tags: string[];
+  category?: string;
+  publishedAt?: string;
+  // Case study specific
+  client?: string;
+  challenge?: string;
+  solution?: string;
+  results?: string;
+  testimonial?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SiteService {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  icon?: string;
+  features: string[];
+  price?: string;
+  duration?: string;
+  status: "active" | "archived";
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "editor" | "viewer";
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  userEmail: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  resourceName: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface DoDroplet {
+  id: number;
+  name: string;
+  status: string;
+  region: { name: string; slug: string };
+  size: { slug: string; vcpus: number; memory: number; disk: number };
+  networks: {
+    v4: Array<{ ip_address: string; type: string }>;
+  };
+  created_at: string;
+}
+
+export interface DoApp {
+  id: string;
+  spec: { name: string };
+  live_url?: string;
+  phase: string;
+  created_at: string;
+}
+
+export interface DoDomain {
+  name: string;
+  ttl: number;
+  zone_file?: string;
 }
 
 export interface DeployTarget {

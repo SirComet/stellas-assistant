@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useUiStore, useAuthStore } from "@/lib/store";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   FileText,
@@ -16,9 +16,32 @@ import {
   ChevronLeft,
   LogOut,
   FolderKanban,
+  BookOpen,
+  Trophy,
+  Briefcase,
+  Cloud,
+  Shield,
+  UserCog,
+  Activity,
+  Database,
 } from "lucide-react";
 
-const navItems = [
+interface NavChild {
+  label: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children?: NavChild[];
+  adminOnly?: boolean;
+}
+
+/** Top-level navigation configuration for the sidebar. */
+const navItems: NavItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -30,12 +53,22 @@ const navItems = [
     icon: FileText,
   },
   {
+    label: "Content",
+    href: "/content",
+    icon: BookOpen,
+    children: [
+      { label: "Blog Posts", href: "/content/blog", icon: FileText },
+      { label: "Case Studies", href: "/content/case-studies", icon: Trophy },
+      { label: "Services", href: "/content/services", icon: Briefcase },
+    ],
+  },
+  {
     label: "CRM",
     href: "/crm",
     icon: Users,
     children: [
       { label: "Contacts", href: "/crm/contacts" },
-      { label: "Projects", href: "/crm/projects" },
+      { label: "Projects", href: "/crm/projects", icon: FolderKanban },
     ],
   },
   {
@@ -49,16 +82,38 @@ const navItems = [
     icon: GitBranch,
   },
   {
+    label: "DigitalOcean",
+    href: "/digitalocean",
+    icon: Cloud,
+  },
+  {
+    label: "Admin",
+    href: "/admin",
+    icon: Shield,
+    adminOnly: true,
+    children: [
+      { label: "Users", href: "/admin/users", icon: UserCog },
+      { label: "Activity", href: "/admin/activity", icon: Activity },
+      { label: "Database", href: "/admin/database", icon: Database },
+    ],
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: Settings,
   },
 ];
 
+/** Collapsible sidebar with nested navigation items, user info, and AI panel toggle. */
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar, toggleAiPanel } = useUiStore();
   const { user, clearAuth } = useAuthStore();
+
+  const visibleItems = navItems.filter((item) => {
+    if (item.adminOnly && user?.role !== "admin") return false;
+    return true;
+  });
 
   return (
     <motion.aside
@@ -76,7 +131,7 @@ export function Sidebar() {
             <div className="w-6 h-6 rounded-md gold-accent flex items-center justify-center">
               <span className="text-white text-xs font-bold">S</span>
             </div>
-            <span className="text-sm font-semibold tracking-tight">Stella's Assistant</span>
+            <span className="text-sm font-semibold tracking-tight">Stella&apos;s Assistant</span>
           </div>
         </motion.div>
         {sidebarCollapsed && (
@@ -88,7 +143,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
 
@@ -112,20 +167,24 @@ export function Sidebar() {
               {/* Sub-items */}
               {!sidebarCollapsed && item.children && isActive && (
                 <div className="ml-7 mt-0.5 space-y-0.5">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className={cn(
-                        "flex items-center px-3 py-1.5 rounded text-xs font-medium transition-colors",
-                        pathname === child.href
-                          ? "text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {child.label}
-                    </Link>
-                  ))}
+                  {item.children.map((child) => {
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium transition-colors",
+                          pathname === child.href
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {ChildIcon && <ChildIcon className="w-3 h-3 shrink-0" />}
+                        {child.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

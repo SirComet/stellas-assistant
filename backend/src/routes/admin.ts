@@ -87,6 +87,17 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ success: true });
   });
 
+  /** Delete a user account (cannot delete your own account) */
+  app.delete("/api/admin/users/:id", { preHandler: requireAdmin }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const currentUser = request.user as { id: string };
+    if (currentUser.id === id) {
+      return reply.code(400).send({ success: false, error: "Cannot delete your own account" });
+    }
+    await db.delete(schema.users).where(eq(schema.users.id, id));
+    return reply.send({ success: true });
+  });
+
   /** Database statistics: table row counts and DB file size in bytes */
   app.get("/api/admin/db-stats", { preHandler: requireAdmin }, async (_request, reply) => {
     const tables = [
