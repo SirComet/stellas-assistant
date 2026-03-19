@@ -2,7 +2,7 @@ import { NodeSSH } from "node-ssh";
 import SftpClient from "ssh2-sftp-client";
 import path from "path";
 import fs from "fs";
-import type { DeployTarget } from "../types/index.js";
+import type { DeployTarget } from "../types/index";
 
 export interface SshConnectionConfig {
   host: string;

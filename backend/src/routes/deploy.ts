@@ -2,10 +2,10 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq, desc } from "drizzle-orm";
-import { db, schema } from "../db/index.js";
-import { authenticate } from "../middleware/auth.js";
-import { testSshConnection, deployViaSftp, runSshCommand } from "../services/ssh.js";
-import { config } from "../config/index.js";
+import { db, schema } from "../db/index";
+import { authenticate } from "../middleware/auth";
+import { testSshConnection, deployViaSftp, runSshCommand } from "../services/ssh";
+import { config } from "../config/index";
 import path from "path";
 
 const targetSchema = z.object({

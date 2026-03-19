@@ -1,15 +1,10 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import * as schema from "./schema.js";
-import { config } from "../config/index.js";
+import * as schema from "./schema";
+import { config } from "../config/index";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Ensure data directory exists
 const dataDir = path.dirname(config.database.url);
 if (!fs.existsSync(dataDir)) {
@@ -23,7 +18,7 @@ sqlite.pragma("foreign_keys = ON");
 export const db = drizzle(sqlite, { schema });
 
 export async function runMigrations(): Promise<void> {
-  const migrationsFolder = path.resolve(__dirname, "../../drizzle");
+  const migrationsFolder = path.resolve(process.cwd(), "drizzle");
   if (fs.existsSync(migrationsFolder)) {
     migrate(db, { migrationsFolder });
   }

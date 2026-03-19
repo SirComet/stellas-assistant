@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
-import { db, schema } from "../db/index.js";
-import { geminiService, type GeminiMessage } from "../services/gemini.js";
-import { authenticate } from "../middleware/auth.js";
+import { db, schema } from "../db/index";
+import { geminiService, type GeminiMessage } from "../services/gemini";
+import { authenticate } from "../middleware/auth";
 
 const chatSchema = z.object({
   sessionId: z.string().optional(),

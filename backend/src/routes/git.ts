@@ -2,8 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
-import { db, schema } from "../db/index.js";
-import { authenticate } from "../middleware/auth.js";
+import { db, schema } from "../db/index";
+import { authenticate } from "../middleware/auth";
 import {
   getGitStatus,
   commitAndPush,
@@ -11,7 +11,7 @@ import {
   getRecentCommits,
   createGithubRepo,
   setupWebhook,
-} from "../services/git.js";
+} from "../services/git";
 
 const gitConfigSchema = z.object({
   name: z.string().min(1),

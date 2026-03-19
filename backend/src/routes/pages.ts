@@ -2,8 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq, like, desc } from "drizzle-orm";
-import { db, schema } from "../db/index.js";
-import { authenticate } from "../middleware/auth.js";
+import { db, schema } from "../db/index";
+import { authenticate } from "../middleware/auth";
 
 const pageSchema = z.object({
   title: z.string().min(1).max(200),

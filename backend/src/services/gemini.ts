@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, type GenerativeModel } from "@google/generative-ai";
-import { config } from "../config/index.js";
+import { config } from "../config/index";
 
 const SYSTEM_CONTEXT = `You are Stella's Assistant, an AI specialized in helping Stella Jimenez — a business innovation and digital transformation consultant — build her professional website and manage her consultancy.
 

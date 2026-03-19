@@ -1,17 +1,8 @@
 import { config as dotenvConfig } from "dotenv";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenvConfig({ path: path.resolve(__dirname, "../../.env") });
-
-function required(key: string): string {
-  const val = process.env[key];
-  if (!val) throw new Error(`Missing required env var: ${key}`);
-  return val;
-}
+// In CJS, __dirname is available globally
+dotenvConfig({ path: path.resolve(process.cwd(), ".env") });
 
 function optional(key: string, fallback: string): string {
   return process.env[key] ?? fallback;
@@ -28,7 +19,7 @@ export const config = {
   },
 
   database: {
-    url: optional("DATABASE_URL", path.resolve(__dirname, "../../data/stella.db")),
+    url: optional("DATABASE_URL", path.resolve(process.cwd(), "data/stella.db")),
   },
 
   gemini: {
@@ -41,11 +32,11 @@ export const config = {
   },
 
   builds: {
-    outputDir: optional("BUILDS_DIR", path.resolve(__dirname, "../../builds")),
+    outputDir: optional("BUILDS_DIR", path.resolve(process.cwd(), "builds")),
   },
 
   uploads: {
-    dir: optional("UPLOADS_DIR", path.resolve(__dirname, "../../uploads")),
+    dir: optional("UPLOADS_DIR", path.resolve(process.cwd(), "uploads")),
     maxSizeMb: parseInt(optional("UPLOADS_MAX_MB", "50"), 10),
   },
 

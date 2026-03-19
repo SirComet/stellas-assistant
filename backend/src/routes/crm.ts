@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq, like, or, desc } from "drizzle-orm";
-import { db, schema } from "../db/index.js";
-import { authenticate } from "../middleware/auth.js";
-import { geminiService } from "../services/gemini.js";
+import { db, schema } from "../db/index";
+import { authenticate } from "../middleware/auth";
+import { geminiService } from "../services/gemini";
 
 const contactSchema = z.object({
   name: z.string().min(1),

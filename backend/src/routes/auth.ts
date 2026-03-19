@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db, schema } from "../db/index.js";
+import { db, schema } from "../db/index";
 
 const loginSchema = z.object({
   email: z.string().email(),

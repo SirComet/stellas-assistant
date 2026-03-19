@@ -1,7 +1,7 @@
-import simpleGit, { type SimpleGit, type CommitResult } from "simple-git";
+import { simpleGit, type SimpleGit, type CommitResult } from "simple-git";
 import path from "path";
 import fs from "fs";
-import { config } from "../config/index.js";
+import { config } from "../config/index";
 import { Octokit } from "@octokit/rest";
 
 export interface GitStatus {
