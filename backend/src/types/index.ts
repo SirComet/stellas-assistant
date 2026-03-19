@@ -160,3 +160,38 @@ export interface WebhookConfig {
   active: boolean;
   createdAt: string;
 }
+
+export type LLMProviderType = "gemini" | "openai" | "anthropic" | "grok" | "ollama";
+
+export interface LLMConnection {
+  id: string;
+  provider: LLMProviderType;
+  displayName: string;
+  email?: string;
+  selectedModel: string;
+  isOAuth: boolean;
+  createdAt: string;
+}
+
+export interface LLMProviderDef {
+  id: LLMProviderType;
+  name: string;
+  description: string;
+  authType: "oauth" | "apikey" | "url";
+  defaultModel: string;
+  models: Array<{ id: string; name: string; note?: string }>;
+  oauthScopes?: string[];
+  freeTier: boolean;
+  freeNote?: string;
+}
+
+export interface LLMActiveConfig {
+  connectionId: string | null;
+  provider: LLMProviderType;
+  model: string;
+}
+
+export interface LLMChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}

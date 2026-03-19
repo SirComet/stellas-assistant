@@ -44,6 +44,20 @@ export const config = {
     defaultAuthorName: optional("GIT_AUTHOR_NAME", "Stella's Assistant"),
     defaultAuthorEmail: optional("GIT_AUTHOR_EMAIL", "assistant@stellajimenez.com"),
   },
+
+  google: {
+    clientId: optional("GOOGLE_CLIENT_ID", ""),
+    clientSecret: optional("GOOGLE_CLIENT_SECRET", ""),
+    redirectUri: optional(
+      "GOOGLE_REDIRECT_URI",
+      "http://localhost:4000/api/llm/oauth/google/callback"
+    ),
+  },
+
+  app: {
+    frontendUrl: optional("FRONTEND_URL", "http://localhost:3000"),
+    backendUrl: optional("BACKEND_URL", "http://localhost:4000"),
+  },
 } as const;
 
 export type Config = typeof config;

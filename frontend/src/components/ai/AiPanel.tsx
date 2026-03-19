@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Sparkles, Loader2, Plus, Trash2 } from "lucide-react";
+import { X, Send, Sparkles, Loader2, Plus, Trash2, ChevronDown, CheckCircle2 } from "lucide-react";
 import { useUiStore } from "@/lib/store";
-import { ai } from "@/lib/api";
+import { ai, llm, type LLMActiveConfig } from "@/lib/api";
 import { cn, formatRelative } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import toast from "react-hot-toast";
 
 interface Message {
@@ -24,11 +25,42 @@ export function AiPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
+  const [showModelPicker, setShowModelPicker] = useState(false);
+
   const { data: sessions } = useQuery({
     queryKey: ["ai-sessions"],
     queryFn: () => ai.sessions(),
     enabled: aiPanelOpen,
   });
+
+  const { data: activeData, refetch: refetchActive } = useQuery({
+    queryKey: ["llm-active"],
+    queryFn: () => llm.getActive(),
+    enabled: aiPanelOpen,
+  });
+
+  const { data: connectionsData } = useQuery({
+    queryKey: ["llm-connections"],
+    queryFn: () => llm.connections(),
+    enabled: aiPanelOpen && showModelPicker,
+  });
+
+  const { data: providersData } = useQuery({
+    queryKey: ["llm-providers"],
+    queryFn: () => llm.providers(),
+    enabled: aiPanelOpen && showModelPicker,
+  });
+
+  const setActiveMutation = useMutation({
+    mutationFn: ({ connectionId, model }: { connectionId: string; model: string }) =>
+      llm.setActive(connectionId, model),
+    onSuccess: () => {
+      void refetchActive();
+      setShowModelPicker(false);
+    },
+  });
+
+  const active: LLMActiveConfig | undefined = activeData?.data;
 
   const chatMutation = useMutation({
     mutationFn: (msg: string) =>
@@ -89,11 +121,23 @@ export function AiPanel() {
         >
           {/* Header */}
           <div className="flex items-center justify-between h-14 px-4 border-b border-border shrink-0">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-stella-gold" />
-              <span className="text-sm font-semibold">AI Assistant</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-4 h-4 text-stella-gold shrink-0" />
+              <span className="text-sm font-semibold shrink-0">AI</span>
+
+              {/* Model selector button */}
+              <button
+                onClick={() => setShowModelPicker((s) => !s)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-accent transition-colors text-xs text-muted-foreground max-w-[160px] min-w-0"
+              >
+                <span className="truncate font-mono">
+                  {active?.model ? active.model.split("-").slice(0, 3).join("-") : "no model"}
+                </span>
+                <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform", showModelPicker && "rotate-180")} />
+              </button>
             </div>
-            <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={handleNewSession}
                 className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
@@ -109,6 +153,64 @@ export function AiPanel() {
               </button>
             </div>
           </div>
+
+          {/* Model picker dropdown */}
+          <AnimatePresence>
+            {showModelPicker && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.12 }}
+                className="border-b border-border bg-muted/30 p-3 space-y-2 max-h-60 overflow-y-auto shrink-0"
+              >
+                {(connectionsData?.data ?? []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    No providers connected. Go to Settings → AI Providers.
+                  </p>
+                ) : (
+                  (connectionsData?.data ?? []).map((conn) => {
+                    const providerDef = (providersData?.data ?? []).find((p) => p.id === conn.provider);
+                    return (
+                      <div key={conn.id}>
+                        <p className="text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
+                          {conn.displayName}
+                        </p>
+                        <div className="space-y-1">
+                          {(providerDef?.models ?? [{ id: conn.selectedModel, name: conn.selectedModel }]).map((model) => {
+                            const isCurrent = conn.id === active?.connectionId && model.id === active?.model;
+                            return (
+                              <button
+                                key={model.id}
+                                onClick={() =>
+                                  setActiveMutation.mutate({ connectionId: conn.id, model: model.id })
+                                }
+                                disabled={setActiveMutation.isPending}
+                                className={cn(
+                                  "w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors text-left",
+                                  isCurrent
+                                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300"
+                                    : "hover:bg-accent"
+                                )}
+                              >
+                                <span className="font-mono">{model.id}</span>
+                                <div className="flex items-center gap-1.5">
+                                  {"note" in model && model.note && (
+                                    <span className="text-muted-foreground">{model.note}</span>
+                                  )}
+                                  {isCurrent && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">

@@ -245,6 +245,35 @@ export const settings = {
     }),
 };
 
+// LLM Providers
+export const llm = {
+  providers: () =>
+    request<{ success: boolean; data: LLMProviderDef[] }>("/api/llm/providers"),
+
+  connections: () =>
+    request<{ success: boolean; data: LLMConnection[] }>("/api/llm/connections"),
+
+  connect: (data: { provider: string; apiKey?: string; ollamaUrl?: string; selectedModel: string }) =>
+    request<{ success: boolean; data: LLMConnection }>("/api/llm/connections", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  disconnect: (id: string) =>
+    request<{ success: boolean }>(`/api/llm/connections/${id}`, { method: "DELETE" }),
+
+  getActive: () =>
+    request<{ success: boolean; data: LLMActiveConfig }>("/api/llm/active"),
+
+  setActive: (connectionId: string, model: string) =>
+    request<{ success: boolean }>("/api/llm/active", {
+      method: "PUT",
+      body: JSON.stringify({ connectionId, model }),
+    }),
+
+  oauthGoogleUrl: () => `${API_BASE}/api/llm/oauth/google/start`,
+};
+
 // Types
 export interface User {
   id: string;
@@ -377,4 +406,34 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface LLMProviderDef {
+  id: string;
+  name: string;
+  description: string;
+  authType: "oauth" | "apikey" | "url";
+  defaultModel: string;
+  freeTier: boolean;
+  freeNote: string;
+  models: Array<{ id: string; name: string; note?: string }>;
+}
+
+export interface LLMConnection {
+  id: string;
+  provider: string;
+  displayName: string;
+  email?: string;
+  selectedModel: string;
+  isOAuth: boolean;
+  hasCredentials: boolean;
+  createdAt: string;
+}
+
+export interface LLMActiveConfig {
+  connectionId: string | null;
+  provider: string;
+  model: string;
+  displayName: string;
+  email?: string;
 }

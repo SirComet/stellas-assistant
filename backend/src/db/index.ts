@@ -154,6 +154,22 @@ export function initDb(): void {
       active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS llm_connections (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      email TEXT,
+      access_token TEXT,
+      refresh_token TEXT,
+      token_expiry TEXT,
+      api_key TEXT,
+      ollama_url TEXT,
+      selected_model TEXT NOT NULL DEFAULT '',
+      is_oauth INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 

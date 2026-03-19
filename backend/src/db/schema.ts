@@ -134,6 +134,23 @@ export const settings = sqliteTable("settings", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// LLM Connections
+export const llmConnections = sqliteTable("llm_connections", {
+  id: text("id").primaryKey(),
+  provider: text("provider").notNull(), // gemini | openai | anthropic | grok | ollama
+  displayName: text("display_name").notNull(),
+  email: text("email"),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiry: text("token_expiry"),
+  apiKey: text("api_key"),
+  ollamaUrl: text("ollama_url"),
+  selectedModel: text("selected_model").notNull().default(""),
+  isOAuth: integer("is_oauth", { mode: "boolean" }).notNull().default(false),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // Webhooks
 export const webhooks = sqliteTable("webhooks", {
   id: text("id").primaryKey(),

@@ -13,6 +13,7 @@ import { pagesRoutes } from "./routes/pages";
 import { crmRoutes } from "./routes/crm";
 import { deployRoutes } from "./routes/deploy";
 import { gitRoutes } from "./routes/git";
+import { llmRoutes } from "./routes/llm";
 import { nanoid } from "nanoid";
 
 async function main(): Promise<void> {
@@ -32,8 +33,15 @@ async function main(): Promise<void> {
   }
 
   // Plugins
+  const allowedOrigins = [
+    ...config.cors.origin.split(",").map((o) => o.trim()),
+    "http://172.16.106.240:3000",
+    "http://localhost:3000",
+    "https://stella.cometolabs.xyz",
+  ];
+
   await app.register(cors, {
-    origin: [config.cors.origin, "http://172.16.106.240:3000", "http://localhost:3000"],
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -68,6 +76,7 @@ async function main(): Promise<void> {
   await app.register(crmRoutes);
   await app.register(deployRoutes);
   await app.register(gitRoutes);
+  await app.register(llmRoutes);
 
   // Media upload
   app.post("/api/media/upload", {

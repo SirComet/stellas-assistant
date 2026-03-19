@@ -17,9 +17,14 @@ services:
       DATABASE_URL: /app/data/stella.db
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash-exp}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://172.16.106.240:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://172.16.106.240:3000,https://stella.cometolabs.xyz}
       UPLOADS_DIR: /app/uploads
       BUILDS_DIR: /app/builds
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://stella.cometolabs.xyz/api/llm/oauth/google/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-https://stella.cometolabs.xyz}
+      BACKEND_URL: ${BACKEND_URL:-https://stella.cometolabs.xyz}
     volumes:
       - stella-data:/app/data
       - stella-uploads:/app/uploads

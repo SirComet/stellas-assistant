@@ -3,8 +3,12 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { db, schema } from "../db/index";
-import { geminiService, type GeminiMessage } from "../services/gemini";
+import { llmService } from "../services/llm";
 import { authenticate } from "../middleware/auth";
+import type { LLMChatMessage } from "../types/index";
+
+// Keep Gemini message type for session storage compatibility
+type GeminiMessage = { role: "user" | "model"; parts: Array<{ text: string }> };
 
 const chatSchema = z.object({
   sessionId: z.string().optional(),
@@ -69,7 +73,14 @@ export async function aiRoutes(app: FastifyInstance): Promise<void> {
       session = newSession;
     }
 
-    const response = await geminiService.chat(messages, message);
+    const llmMessages: LLMChatMessage[] = [
+      ...messages.map((m) => ({
+        role: (m.role === "model" ? "assistant" : "user") as "user" | "assistant",
+        content: m.parts[0]?.text ?? "",
+      })),
+      { role: "user" as const, content: message },
+    ];
+    const response = await llmService.chat(llmMessages);
 
     // Update session with new messages
     const updatedMessages: GeminiMessage[] = [
@@ -137,7 +148,15 @@ export async function aiRoutes(app: FastifyInstance): Promise<void> {
 
     let fullResponse = "";
 
-    await geminiService.streamChat(messages, message, (chunk) => {
+    const llmMessages: LLMChatMessage[] = [
+      ...messages.map((m) => ({
+        role: (m.role === "model" ? "assistant" : "user") as "user" | "assistant",
+        content: m.parts[0]?.text ?? "",
+      })),
+      { role: "user" as const, content: message },
+    ];
+
+    await llmService.streamChat(llmMessages, (chunk) => {
       fullResponse += chunk;
       reply.raw.write(`data: ${JSON.stringify({ chunk })}\n\n`);
     });
@@ -172,7 +191,31 @@ export async function aiRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({ success: false, error: result.error.message });
     }
 
-    const pageContent = await geminiService.generatePageContent(result.data.prompt);
+    const fullPrompt = `Generate a complete webpage component based on this request: "${result.data.prompt}"
+
+Return a JSON object with this structure:
+{
+  "html": "complete semantic HTML",
+  "css": "clean CSS styles",
+  "components": [],
+  "suggestions": ["improvement suggestion 1", "improvement suggestion 2"]
+}
+
+Use a clean, minimal design. Prefer CSS Grid/Flexbox. Use Inter or system fonts. Make the HTML production-ready and accessible.`;
+
+    const raw = await llmService.generateContent(fullPrompt);
+    const jsonMatch = raw.match(/```json\n([\s\S]*?)\n```/) ?? raw.match(/\{[\s\S]*\}/);
+    let pageContent: { html: string; css: string; components: unknown[]; suggestions: string[] };
+
+    if (jsonMatch) {
+      try {
+        pageContent = JSON.parse(jsonMatch[1] ?? jsonMatch[0]) as typeof pageContent;
+      } catch {
+        pageContent = { html: raw, css: "", components: [], suggestions: [] };
+      }
+    } else {
+      pageContent = { html: raw, css: "", components: [], suggestions: [] };
+    }
 
     return reply.send({
       success: true,
@@ -189,7 +232,15 @@ export async function aiRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({ success: false, error: result.error.message });
     }
 
-    const copy = await geminiService.generateCopy(result.data.type, result.data.context);
+    const copyPrompts: Record<string, string> = {
+      hero: `Write a compelling hero section headline and subheadline for Stella Jimenez's consultancy. ${result.data.context ?? ""}`,
+      about: `Write an engaging 'About Stella' section that highlights her expertise and human-centered approach. ${result.data.context ?? ""}`,
+      services: `Write descriptions for Stella's three core services: Business Diagnosis, Digital Product Design, and Innovation Strategy. ${result.data.context ?? ""}`,
+      cta: `Write 3 compelling call-to-action phrases for Stella's consultancy website. ${result.data.context ?? ""}`,
+      bio: `Write a professional yet personal bio for Stella Jimenez as an innovation consultant. ${result.data.context ?? ""}`,
+      testimonial: `Write 2 realistic client testimonials for Stella's innovation consulting services. ${result.data.context ?? ""}`,
+    };
+    const copy = await llmService.generateContent(copyPrompts[result.data.type] ?? result.data.type);
 
     return reply.send({
       success: true,
