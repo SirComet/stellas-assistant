@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: stella-backend
     restart: unless-stopped
+    ports:
+      - "4000:4000"
     environment:
       NODE_ENV: production
       PORT: 4000
@@ -40,6 +42,8 @@ services:
         NEXT_PUBLIC_API_URL: http://172.16.106.240:4000
     container_name: stella-frontend
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://172.16.106.240:4000
     depends_on:
