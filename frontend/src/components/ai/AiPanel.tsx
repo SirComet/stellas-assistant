@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { X, Send, Sparkles, Loader2, Plus, Trash2, ChevronDown, CheckCircle2 } from "lucide-react";
 import { useUiStore } from "@/lib/store";
 import { ai, llm, type LLMActiveConfig } from "@/lib/api";
