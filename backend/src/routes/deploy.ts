@@ -6,7 +6,19 @@ import { db, schema } from "../db/index";
 import { authenticate } from "../middleware/auth";
 import { testSshConnection, deployViaSftp, runSshCommand } from "../services/ssh";
 import { config } from "../config/index";
-import path from "path";
+import type { DeployTarget } from "../types/index";
+
+type DbTarget = typeof schema.deployTargets.$inferSelect;
+
+function toDeployTarget(t: DbTarget): DeployTarget {
+  return {
+    ...t,
+    privateKey: t.privateKey ?? undefined,
+    password: t.password ?? undefined,
+    webUrl: t.webUrl ?? undefined,
+    lastDeployedAt: t.lastDeployedAt ?? undefined,
+  };
+}
 
 const targetSchema = z.object({
   name: z.string().min(1),
@@ -124,7 +136,7 @@ export async function deployRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(404).send({ success: false, error: "Target not found" });
     }
 
-    const result = await testSshConnection(target);
+    const result = await testSshConnection(toDeployTarget(target));
     return reply.send({ success: true, data: result });
   });
 
@@ -161,7 +173,7 @@ export async function deployRoutes(app: FastifyInstance): Promise<void> {
       try {
         logs.push(`[${new Date().toISOString()}] Starting deployment to ${target.name}`);
 
-        const result = await deployViaSftp(target, buildDir, (percent, file) => {
+        const result = await deployViaSftp(toDeployTarget(target), buildDir, (percent, file) => {
           logs.push(`[${percent}%] Uploading ${file}`);
         });
 
@@ -183,7 +195,7 @@ export async function deployRoutes(app: FastifyInstance): Promise<void> {
         // Run post-deploy command if specified
         if (body.postCommand) {
           logs.push(`[${new Date().toISOString()}] Running: ${body.postCommand}`);
-          const cmdResult = await runSshCommand(target, body.postCommand);
+          const cmdResult = await runSshCommand(toDeployTarget(target), body.postCommand);
           if (cmdResult.stdout) logs.push(cmdResult.stdout);
           if (cmdResult.stderr) logs.push(`STDERR: ${cmdResult.stderr}`);
         }
@@ -274,7 +286,7 @@ export async function deployRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(404).send({ success: false, error: "Target not found" });
     }
 
-    const result = await runSshCommand(target, body.command);
+    const result = await runSshCommand(toDeployTarget(target), body.command);
     return reply.send({ success: true, data: result });
   });
 }
