@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stella-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: "0.0.0.0"
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      DATABASE_URL: /app/data/stella.db
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash-exp}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://172.16.106.240:3000}
+      UPLOADS_DIR: /app/uploads
+      BUILDS_DIR: /app/builds
+    volumes:
+      - stella-data:/app/data
+      - stella-uploads:/app/uploads
+      - stella-builds:/app/builds
+      - /home/comet/.ssh:/root/.ssh:ro
+    networks:
+      - stella-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://172.16.106.240:4000
+    container_name: stella-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://172.16.106.240:4000
+    depends_on:
+      - backend
+    networks:
+      - stella-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  stella-data:
+    name: stella-data
+  stella-uploads:
+    name: stella-uploads
+  stella-builds:
+    name: stella-builds
+
+networks:
+  stella-net:
+    name: stella-net
+    external: false

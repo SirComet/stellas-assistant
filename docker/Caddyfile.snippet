@@ -1,0 +1,33 @@
+# Add this to your existing Caddyfile on the Raspberry Pi
+# or create a new site block
+
+# For local network access via hostname
+:80 {
+  # Frontend
+  handle /* {
+    reverse_proxy stella-frontend:3000
+  }
+
+  # Backend API
+  handle /api/* {
+    reverse_proxy stella-backend:4000
+  }
+
+  # Uploads
+  handle /uploads/* {
+    reverse_proxy stella-backend:4000
+  }
+
+  encode gzip
+}
+
+# If you have a domain via cloudflared tunnel, use this instead:
+# stella.yourdomain.com {
+#   handle /api/* {
+#     reverse_proxy stella-backend:4000
+#   }
+#   handle {
+#     reverse_proxy stella-frontend:3000
+#   }
+#   encode gzip
+# }

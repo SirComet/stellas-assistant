@@ -1,0 +1,146 @@
+import { sql } from "drizzle-orm";
+import {
+  text,
+  integer,
+  sqliteTable,
+  real,
+} from "drizzle-orm/sqlite-core";
+
+// Users
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role", { enum: ["admin", "editor"] }).notNull().default("editor"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Pages
+export const pages = sqliteTable("pages", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull().default("[]"),
+  metadata: text("metadata").notNull().default("{}"),
+  status: text("status", { enum: ["draft", "published", "archived"] }).notNull().default("draft"),
+  template: text("template").default("default"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Contacts (CRM)
+export const contacts = sqliteTable("contacts", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  company: text("company"),
+  role: text("role"),
+  status: text("status", { enum: ["lead", "prospect", "client", "inactive"] }).notNull().default("lead"),
+  tags: text("tags").notNull().default("[]"),
+  notes: text("notes").notNull().default(""),
+  source: text("source"),
+  avatarUrl: text("avatar_url"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Projects
+export const projects = sqliteTable("projects", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  status: text("status", { enum: ["planning", "active", "review", "completed", "paused"] }).notNull().default("planning"),
+  clientId: text("client_id").references(() => contacts.id),
+  budget: real("budget"),
+  startDate: text("start_date"),
+  dueDate: text("due_date"),
+  tags: text("tags").notNull().default("[]"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Deploy Targets
+export const deployTargets = sqliteTable("deploy_targets", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  host: text("host").notNull(),
+  port: integer("port").notNull().default(22),
+  username: text("username").notNull(),
+  authType: text("auth_type", { enum: ["password", "key"] }).notNull().default("key"),
+  privateKey: text("private_key"),
+  password: text("password"),
+  remotePath: text("remote_path").notNull(),
+  webUrl: text("web_url"),
+  lastDeployedAt: text("last_deployed_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Git Configurations
+export const gitConfigs = sqliteTable("git_configs", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  repoUrl: text("repo_url").notNull(),
+  branch: text("branch").notNull().default("main"),
+  token: text("token"),
+  localPath: text("local_path").notNull(),
+  autoPush: integer("auto_push", { mode: "boolean" }).notNull().default(false),
+  webhookSecret: text("webhook_secret"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Deployments
+export const deployments = sqliteTable("deployments", {
+  id: text("id").primaryKey(),
+  targetId: text("target_id").notNull().references(() => deployTargets.id),
+  status: text("status", { enum: ["pending", "running", "success", "failed"] }).notNull().default("pending"),
+  log: text("log").notNull().default(""),
+  commitHash: text("commit_hash"),
+  triggeredBy: text("triggered_by"),
+  startedAt: text("started_at").notNull().default(sql`(datetime('now'))`),
+  completedAt: text("completed_at"),
+});
+
+// AI Sessions
+export const aiSessions = sqliteTable("ai_sessions", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  messages: text("messages").notNull().default("[]"),
+  context: text("context"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Media
+export const media = sqliteTable("media", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  filename: text("filename").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  url: text("url").notNull(),
+  altText: text("alt_text"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Settings
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Webhooks
+export const webhooks = sqliteTable("webhooks", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  secret: text("secret"),
+  events: text("events").notNull().default("[]"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});

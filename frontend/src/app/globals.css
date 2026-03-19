@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 99%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 240 10% 4%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 4%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 10% 4%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 240 10% 4%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 4% 10%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 10%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 10%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 4% 14%;
+    --input: 240 4% 14%;
+    --ring: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+  }
+
+  /* Swiss typography — tight tracking on headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-stella-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-stella-400;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-stella-900 text-stella-50;
+  }
+}
+
+@layer components {
+  /* Sidebar navigation items */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium
+           text-muted-foreground hover:text-foreground hover:bg-accent
+           transition-all duration-150 cursor-pointer select-none;
+  }
+
+  .nav-item.active {
+    @apply text-foreground bg-accent;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-px;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-lead { @apply bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300; }
+  .badge-prospect { @apply bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300; }
+  .badge-client { @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300; }
+  .badge-inactive { @apply bg-stella-100 text-stella-500 dark:bg-stella-800 dark:text-stella-400; }
+
+  .badge-planning { @apply bg-stella-100 text-stella-600 dark:bg-stella-800 dark:text-stella-300; }
+  .badge-active { @apply bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300; }
+  .badge-review { @apply bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300; }
+  .badge-completed { @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300; }
+  .badge-paused { @apply bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300; }
+
+  .badge-draft { @apply bg-stella-100 text-stella-600; }
+  .badge-published { @apply bg-emerald-50 text-emerald-700; }
+  .badge-archived { @apply bg-stella-100 text-stella-400; }
+
+  /* Gold accent */
+  .gold-accent {
+    background: linear-gradient(135deg, #c9a84c 0%, #e8c96e 100%);
+  }
+
+  /* Input styles */
+  .field {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .field label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2
+           text-sm placeholder:text-muted-foreground
+           focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-foreground/30
+           transition-colors;
+  }
+
+  /* AI chat bubble */
+  .chat-bubble-user {
+    @apply bg-stella-900 text-stella-50 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm max-w-[80%] ml-auto;
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-muted text-foreground rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm max-w-[85%];
+  }
+
+  /* Page builder component */
+  .builder-component {
+    @apply relative border border-transparent rounded hover:border-primary/30
+           hover:bg-accent/30 transition-all duration-150 cursor-pointer;
+  }
+
+  .builder-component.selected {
+    @apply border-primary/50 bg-accent/50;
+  }
+
+  /* Divider */
+  .section-divider {
+    @apply border-t border-border my-6;
+  }
+}
+
+/* Smooth page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
