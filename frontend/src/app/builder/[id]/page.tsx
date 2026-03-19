@@ -51,14 +51,16 @@ export default function PageEditor({ params }: PageEditorProps) {
   }
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      pages.update(id, {
-        metadata: JSON.stringify({
-          ...(data?.data?.metadata ?? {}),
-          customHtml: htmlContent,
-          customCss: cssContent,
-        }),
-      }),
+    mutationFn: () => {
+      const metaStr = JSON.stringify({
+        ...(data?.data?.metadata ?? {}),
+        customHtml: htmlContent,
+        customCss: cssContent,
+      });
+      return pages.update(id, {
+        metadata: metaStr as unknown as Record<string, unknown>,
+      });
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["page", id] });
       void queryClient.invalidateQueries({ queryKey: ["pages"] });
