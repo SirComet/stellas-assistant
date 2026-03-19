@@ -170,7 +170,90 @@ export function initDb(): void {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS content_posts (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL DEFAULT 'blog',
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      excerpt TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      featured_image TEXT,
+      author TEXT NOT NULL DEFAULT 'Stella Jimenez',
+      status TEXT NOT NULL DEFAULT 'draft',
+      published_at TEXT,
+      tags TEXT NOT NULL DEFAULT '[]',
+      category TEXT,
+      client TEXT,
+      challenge TEXT,
+      solution TEXT,
+      results TEXT,
+      testimonial TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS site_services (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL DEFAULT '',
+      icon TEXT,
+      features TEXT NOT NULL DEFAULT '[]',
+      price TEXT,
+      duration TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS project_milestones (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      due_date TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS contact_activities (
+      id TEXT PRIMARY KEY,
+      contact_id TEXT NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+      type TEXT NOT NULL DEFAULT 'note',
+      title TEXT NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      occurred_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id TEXT PRIMARY KEY,
+      user_email TEXT NOT NULL DEFAULT '',
+      action TEXT NOT NULL,
+      resource_type TEXT NOT NULL,
+      resource_id TEXT,
+      resource_name TEXT NOT NULL DEFAULT '',
+      metadata TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
+
+  upgradeDb();
+}
+
+/** Runs safe column additions for existing deployments that may be missing new columns */
+export function upgradeDb(): void {
+  const upgrades = [
+    `ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1`,
+  ];
+  for (const sql of upgrades) {
+    try {
+      sqlite.exec(sql);
+    } catch { /* column already exists — safe to ignore */ }
+  }
 }
 
 export { schema };

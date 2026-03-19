@@ -289,4 +289,93 @@ export async function crmRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.send({ success: true, data: { analysis } });
   });
+
+  // ── Project Milestones ────────────────────────────────────────────────────
+
+  /** List milestones for a project ordered by sortOrder */
+  app.get("/api/crm/projects/:id/milestones", { preHandler: authenticate }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const milestones = await db
+      .select()
+      .from(schema.projectMilestones)
+      .where(eq(schema.projectMilestones.projectId, id))
+      .orderBy(schema.projectMilestones.sortOrder);
+    return reply.send({ success: true, data: milestones });
+  });
+
+  /** Create a project milestone */
+  app.post("/api/crm/projects/:id/milestones", { preHandler: authenticate }, async (request, reply) => {
+    const { id: projectId } = request.params as { id: string };
+    const body = request.body as { title: string; dueDate?: string; status?: string };
+    const mid = nanoid();
+    await db.insert(schema.projectMilestones).values({
+      id: mid,
+      projectId,
+      title: body.title,
+      dueDate: body.dueDate ?? null,
+      status: (body.status as "pending" | "in_progress" | "done") ?? "pending",
+      sortOrder: 0,
+    });
+    const [m] = await db.select().from(schema.projectMilestones).where(eq(schema.projectMilestones.id, mid)).limit(1);
+    return reply.code(201).send({ success: true, data: m });
+  });
+
+  /** Update a project milestone */
+  app.put("/api/crm/projects/:projectId/milestones/:mid", { preHandler: authenticate }, async (request, reply) => {
+    const { mid } = request.params as { projectId: string; mid: string };
+    const body = request.body as Partial<{ title: string; dueDate: string; status: "pending" | "in_progress" | "done" }>;
+    const updateFields: Partial<typeof schema.projectMilestones.$inferInsert> = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (body.title !== undefined) updateFields.title = body.title;
+    if (body.dueDate !== undefined) updateFields.dueDate = body.dueDate;
+    if (body.status !== undefined) updateFields.status = body.status;
+    await db.update(schema.projectMilestones).set(updateFields).where(eq(schema.projectMilestones.id, mid));
+    const [m] = await db.select().from(schema.projectMilestones).where(eq(schema.projectMilestones.id, mid)).limit(1);
+    return reply.send({ success: true, data: m });
+  });
+
+  /** Delete a project milestone */
+  app.delete("/api/crm/projects/:projectId/milestones/:mid", { preHandler: authenticate }, async (request, reply) => {
+    const { mid } = request.params as { projectId: string; mid: string };
+    await db.delete(schema.projectMilestones).where(eq(schema.projectMilestones.id, mid));
+    return reply.send({ success: true });
+  });
+
+  // ── Contact Activities ────────────────────────────────────────────────────
+
+  /** List activity timeline for a contact ordered by most recent first */
+  app.get("/api/crm/contacts/:id/activities", { preHandler: authenticate }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const activities = await db
+      .select()
+      .from(schema.contactActivities)
+      .where(eq(schema.contactActivities.contactId, id))
+      .orderBy(desc(schema.contactActivities.occurredAt));
+    return reply.send({ success: true, data: activities });
+  });
+
+  /** Add an activity entry to a contact's timeline */
+  app.post("/api/crm/contacts/:id/activities", { preHandler: authenticate }, async (request, reply) => {
+    const { id: contactId } = request.params as { id: string };
+    const body = request.body as { type?: string; title: string; body?: string; occurredAt?: string };
+    const aid = nanoid();
+    await db.insert(schema.contactActivities).values({
+      id: aid,
+      contactId,
+      type: (body.type as "note" | "email" | "call" | "meeting" | "status_change") ?? "note",
+      title: body.title,
+      body: body.body ?? "",
+      occurredAt: body.occurredAt ?? new Date().toISOString(),
+    });
+    const [a] = await db.select().from(schema.contactActivities).where(eq(schema.contactActivities.id, aid)).limit(1);
+    return reply.code(201).send({ success: true, data: a });
+  });
+
+  /** Delete a contact activity entry */
+  app.delete("/api/crm/contacts/:contactId/activities/:aid", { preHandler: authenticate }, async (request, reply) => {
+    const { aid } = request.params as { contactId: string; aid: string };
+    await db.delete(schema.contactActivities).where(eq(schema.contactActivities.id, aid));
+    return reply.send({ success: true });
+  });
 }

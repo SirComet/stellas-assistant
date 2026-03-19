@@ -6,7 +6,7 @@ import staticPlugin from "@fastify/static";
 import path from "path";
 import fs from "fs";
 import { config } from "./config/index";
-import { initDb, db, schema } from "./db/index";
+import { initDb, upgradeDb, db, schema } from "./db/index";
 import { authRoutes } from "./routes/auth";
 import { aiRoutes } from "./routes/ai";
 import { pagesRoutes } from "./routes/pages";
@@ -14,6 +14,9 @@ import { crmRoutes } from "./routes/crm";
 import { deployRoutes } from "./routes/deploy";
 import { gitRoutes } from "./routes/git";
 import { llmRoutes } from "./routes/llm";
+import { contentRoutes } from "./routes/content";
+import { adminRoutes } from "./routes/admin";
+import { digitalOceanRoutes } from "./routes/digitalocean";
 import { nanoid } from "nanoid";
 
 async function main(): Promise<void> {
@@ -77,6 +80,9 @@ async function main(): Promise<void> {
   await app.register(deployRoutes);
   await app.register(gitRoutes);
   await app.register(llmRoutes);
+  await app.register(contentRoutes);
+  await app.register(adminRoutes);
+  await app.register(digitalOceanRoutes);
 
   // Media upload
   app.post("/api/media/upload", {
@@ -150,6 +156,7 @@ async function main(): Promise<void> {
 
   // Initialize database
   initDb();
+  upgradeDb();
 
   // Start server
   await app.listen({ port: config.port, host: config.host });

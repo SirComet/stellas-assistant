@@ -12,7 +12,8 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role", { enum: ["admin", "editor"] }).notNull().default("editor"),
+  role: text("role", { enum: ["admin", "editor", "viewer"] }).notNull().default("editor"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -159,5 +160,80 @@ export const webhooks = sqliteTable("webhooks", {
   secret: text("secret"),
   events: text("events").notNull().default("[]"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Content Posts (blog posts + case studies via type discriminator)
+export const contentPosts = sqliteTable("content_posts", {
+  id: text("id").primaryKey(),
+  type: text("type", { enum: ["blog", "case_study"] }).notNull().default("blog"),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  excerpt: text("excerpt").notNull().default(""),
+  content: text("content").notNull().default(""),
+  featuredImage: text("featured_image"),
+  author: text("author").notNull().default("Stella Jimenez"),
+  status: text("status", { enum: ["draft", "published", "archived"] }).notNull().default("draft"),
+  publishedAt: text("published_at"),
+  tags: text("tags").notNull().default("[]"),
+  category: text("category"),
+  // Case study specific (nullable for blog)
+  client: text("client"),
+  challenge: text("challenge"),
+  solution: text("solution"),
+  results: text("results"),
+  testimonial: text("testimonial"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Services offered by Stella
+export const siteServices = sqliteTable("site_services", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description").notNull().default(""),
+  icon: text("icon"),
+  features: text("features").notNull().default("[]"),
+  price: text("price"),
+  duration: text("duration"),
+  status: text("status", { enum: ["active", "archived"] }).notNull().default("active"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Project milestones
+export const projectMilestones = sqliteTable("project_milestones", {
+  id: text("id").primaryKey(),
+  projectId: text("project_id").notNull().references(() => projects.id),
+  title: text("title").notNull(),
+  dueDate: text("due_date"),
+  status: text("status", { enum: ["pending", "in_progress", "done"] }).notNull().default("pending"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Contact activity timeline
+export const contactActivities = sqliteTable("contact_activities", {
+  id: text("id").primaryKey(),
+  contactId: text("contact_id").notNull().references(() => contacts.id),
+  type: text("type", { enum: ["note", "email", "call", "meeting", "status_change"] }).notNull().default("note"),
+  title: text("title").notNull(),
+  body: text("body").notNull().default(""),
+  occurredAt: text("occurred_at").notNull().default(sql`(datetime('now'))`),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// Platform-wide activity log
+export const activityLog = sqliteTable("activity_log", {
+  id: text("id").primaryKey(),
+  userEmail: text("user_email").notNull().default(""),
+  action: text("action").notNull(),
+  resourceType: text("resource_type").notNull(),
+  resourceId: text("resource_id"),
+  resourceName: text("resource_name").notNull().default(""),
+  metadata: text("metadata").notNull().default("{}"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });

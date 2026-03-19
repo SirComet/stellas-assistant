@@ -195,3 +195,80 @@ export interface LLMChatMessage {
   role: "user" | "assistant";
   content: string;
 }
+
+export interface ContentPost {
+  id: string;
+  type: "blog" | "case_study";
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage?: string;
+  author: string;
+  status: "draft" | "published" | "archived";
+  publishedAt?: string;
+  tags: string[];
+  category?: string;
+  client?: string;
+  challenge?: string;
+  solution?: string;
+  results?: string;
+  testimonial?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SiteService {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  icon?: string;
+  features: string[];
+  price?: string;
+  duration?: string;
+  status: "active" | "archived";
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectMilestone {
+  id: string;
+  projectId: string;
+  title: string;
+  dueDate?: string;
+  status: "pending" | "in_progress" | "done";
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface ContactActivity {
+  id: string;
+  contactId: string;
+  type: "note" | "email" | "call" | "meeting" | "status_change";
+  title: string;
+  body: string;
+  occurredAt: string;
+  createdAt: string;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  userEmail: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  resourceName: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface DODroplet {
+  id: number;
+  name: string;
+  status: string;
+  networks: { v4: Array<{ ip_address: string; type: string }> };
+  region: { name: string; slug: string };
+  size_slug: string;
+}
