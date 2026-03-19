@@ -35,7 +35,7 @@ export default function ActivityPage() {
       admin.activity.list({
         limit: String(PAGE_SIZE),
         offset: String(page * PAGE_SIZE),
-        resourceType: resourceType || undefined,
+        ...(resourceType ? { resourceType } : {}),
       }),
     staleTime: 30_000,
   });

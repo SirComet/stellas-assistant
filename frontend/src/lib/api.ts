@@ -260,7 +260,7 @@ export const admin = {
       request<{ success: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" }),
   },
   activity: {
-    list: (params?: { page?: string; limit?: string; resourceType?: string }) =>
+    list: (params?: { limit?: string; offset?: string; resourceType?: string }) =>
       request<{ success: boolean; data: ActivityLogEntry[] }>("/api/admin/activity", {
         params: params as Record<string, string> | undefined,
       }),
