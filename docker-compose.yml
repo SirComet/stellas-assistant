@@ -25,6 +25,7 @@ services:
       - /home/comet/.ssh:/root/.ssh:ro
     networks:
       - stella-net
+      - proxy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
       interval: 30s
@@ -45,6 +46,7 @@ services:
       - backend
     networks:
       - stella-net
+      - proxy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
       interval: 30s
@@ -63,3 +65,5 @@ networks:
   stella-net:
     name: stella-net
     external: false
+  proxy:
+    external: true
