@@ -48,20 +48,14 @@ await app.register(multipart, {
   limits: { fileSize: config.uploads.maxSizeMb * 1024 * 1024 },
 });
 
-// Serve uploaded files
+// Serve static files (uploads + builds)
 const uploadsDir = config.uploads.dir;
-await app.register(staticPlugin, {
-  root: uploadsDir,
-  prefix: "/uploads/",
-  decorateReply: false,
-});
-
-// Serve built pages
 const buildsDir = config.builds.outputDir;
+
 await app.register(staticPlugin, {
-  root: buildsDir,
-  prefix: "/preview/",
-  decorateReply: false,
+  root: [uploadsDir, buildsDir],
+  prefix: "/uploads/",
+  decorateReply: true,
 });
 
 // Health check

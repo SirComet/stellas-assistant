@@ -48,6 +48,7 @@ export default function ContactsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["contacts", search],
     queryFn: () => crm.contacts.list({ search: search || undefined }),
+    staleTime: 30_000,
   });
 
   const createMutation = useMutation({

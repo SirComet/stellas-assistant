@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Header } from "@/components/layout/Header";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -25,12 +25,13 @@ export default function SettingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["settings"],
     queryFn: () => settings.get(),
-    onSuccess: (res: Awaited<ReturnType<typeof settings.get>>) => {
-      if (res.success && res.data) {
-        setForm((f) => ({ ...f, ...res.data }));
-      }
-    },
   });
+
+  useEffect(() => {
+    if (data?.success && data.data) {
+      setForm((f) => ({ ...f, ...data.data }));
+    }
+  }, [data]);
 
   const saveMutation = useMutation({
     mutationFn: () => settings.update(form),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { use } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,14 +37,18 @@ export default function PageEditor({ params }: PageEditorProps) {
   const { data, isLoading } = useQuery({
     queryKey: ["page", id],
     queryFn: () => pages.get(id),
-    onSuccess: (res: Awaited<ReturnType<typeof pages.get>>) => {
-      if (res.success && res.data) {
-        const meta = res.data.metadata as { customHtml?: string; customCss?: string };
-        setHtmlContent(meta.customHtml ?? "");
-        setCssContent(meta.customCss ?? "");
-      }
-    },
   });
+
+  // Sync content when data loads
+  const prevIdRef = useRef<string | null>(null);
+  if (data?.success && data.data && prevIdRef.current !== id) {
+    prevIdRef.current = id;
+    const meta = data.data.metadata as { customHtml?: string; customCss?: string };
+    if (!htmlContent && !cssContent) {
+      setHtmlContent(meta.customHtml ?? "");
+      setCssContent(meta.customCss ?? "");
+    }
+  }
 
   const saveMutation = useMutation({
     mutationFn: () =>
